@@ -46,10 +46,18 @@ func _ready() -> void:
         var radius := rng.randf_range(42,85)
         trees.append({"p":p,"r":radius,"phase":rng.randf()*TAU_F,"hp":3,"type":i%3})
     trees.sort_custom(func(a: Dictionary,b: Dictionary)->bool: return a["p"].y < b["p"].y)
-    for i in range(4400):
+    # Distinct animated grass meadows, not uniformly scattered glyph noise.
+    var meadow_noise := FastNoiseLite.new()
+    meadow_noise.seed = 2301
+    meadow_noise.frequency = 0.0048
+    for i in range(29500):
         var p := Vector2(rng.randf_range(0,EXTENT.x),rng.randf_range(0,EXTENT.y))
-        if p.y > _bank(p.x)-20 or absf(p.y - (760.0 + 17.0*sin(p.x*0.013))) < 58.0 or p.distance_to(hero) < 90.0: continue
-        grass.append({"p":p,"height":rng.randf_range(8,22),"phase":rng.randf()*TAU_F,"kind":i%13})
+        if p.y > _bank(p.x)-20 or absf(p.y - (760.0 + 17.0*sin(p.x*0.013))) < 50.0 or p.distance_to(hero) < 72.0:
+            continue
+        var density: float = meadow_noise.get_noise_2d(p.x,p.y)
+        if density < -0.06:
+            continue
+        grass.append({"p":p,"height":rng.randf_range(11,29),"phase":rng.randf()*TAU_F,"kind":i%13})
     for i in range(350):
         var p := Vector2(rng.randf_range(0,EXTENT.x),rng.randf_range(0,EXTENT.y))
         if p.y < _bank(p.x)-10:
