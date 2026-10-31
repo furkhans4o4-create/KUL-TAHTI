@@ -1,7 +1,7 @@
 name: Visual regression preview
 on:
   push:
-    branches: [main]
+    branches: [main, visual-rebuild-3d]
     paths:
       - 'scripts/**'
       - 'shaders/**'
