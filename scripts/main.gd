@@ -1,10 +1,10 @@
 extends Control
 
-const FOREST = preload("res://scripts/forest.gd")
+const FOREST = preload("res://scripts/forest3d.gd")
 const ASCII = preload("res://shaders/ascii.gdshader")
 const FONT_ATLAS = preload("res://scripts/glyph_atlas.gd")
 var viewport: SubViewport
-var forest: Node2D
+var forest: Node3D
 var screen: TextureRect
 var top_label: Label
 var bottom_label: Label
@@ -17,7 +17,7 @@ func _ready() -> void:
     viewport = SubViewport.new()
     viewport.name = "WorldViewport"
     viewport.size = Vector2i(1280,720)
-    viewport.disable_3d = true
+    viewport.disable_3d = false
     viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
     add_child(viewport)
     forest = FOREST.new()
@@ -59,7 +59,7 @@ func _ready() -> void:
 func _resize() -> void:
     var s = get_viewport_rect().size
     viewport.size = Vector2i(maxi(640, int(s.x)), maxi(360, int(s.y)))
-    effect.set_shader_parameter("glyph_grid", Vector2(maxf(100.0,s.x/6.6),maxf(64.0,s.y/8.8)))
+    effect.set_shader_parameter("glyph_grid", Vector2(maxf(220.0,s.x/3.8),maxf(115.0,s.y/5.1)))
     if bottom_label != null:
         bottom_label.position = Vector2(20,s.y-56.0)
     if header_background != null:
