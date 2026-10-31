@@ -4,10 +4,10 @@ extends Node2D
 # converted to ASCII glyphs by the compositing shader on the parent Control.
 const EXTENT := Vector2(3200.0,2500.0)
 const TAU_F := PI * 2.0
-const EARTH := Color("172b27")
-const MOSS := Color("294a36")
+const EARTH := Color("080f10")
+const MOSS := Color("243b2b")
 const BARK := Color("5a5749")
-const PINE := Color("315e4b")
+const PINE := Color("4b8060")
 const SILVER := Color("9cb8ac")
 const GOLD := Color("d8aa68")
 
@@ -46,9 +46,9 @@ func _ready() -> void:
         var radius := rng.randf_range(42,85)
         trees.append({"p":p,"r":radius,"phase":rng.randf()*TAU_F,"hp":3,"type":i%3})
     trees.sort_custom(func(a: Dictionary,b: Dictionary)->bool: return a["p"].y < b["p"].y)
-    for i in range(9500):
+    for i in range(4400):
         var p := Vector2(rng.randf_range(0,EXTENT.x),rng.randf_range(0,EXTENT.y))
-        if p.y > _bank(p.x)-20: continue
+        if p.y > _bank(p.x)-20 or absf(p.y - (760.0 + 17.0*sin(p.x*0.013))) < 58.0 or p.distance_to(hero) < 90.0: continue
         grass.append({"p":p,"height":rng.randf_range(8,22),"phase":rng.randf()*TAU_F,"kind":i%13})
     for i in range(350):
         var p := Vector2(rng.randf_range(0,EXTENT.x),rng.randf_range(0,EXTENT.y))
@@ -69,7 +69,7 @@ func _process(dt: float) -> void:
     dt = minf(dt,0.055)
     timer += dt
     day_time = fposmod(day_time + dt/330.0,1.0)
-    light = 0.23 + 0.77*(0.5+0.5*sin(day_time*TAU_F-PI*0.5))
+    light = 0.42 + 0.58*(0.5+0.5*sin(day_time*TAU_F-PI*0.5))
     wind = 6.0*sin(timer*0.71)+3.0*sin(timer*1.63)
     mp = minf(100.0,mp+dt*5.0)
     attack_time = maxf(0.0,attack_time-dt)
@@ -209,7 +209,7 @@ func _draw() -> void:
     _ambient(size,center)
 
 func _ground(size: Vector2,center: Vector2)->void:
-    draw_rect(Rect2(Vector2.ZERO,size),_col(EARTH,0.9),true)
+    draw_rect(Rect2(Vector2.ZERO,size),_col(EARTH,0.8),true)
     var offset := hero-center
     var start_x := int(floor(offset.x/34.0))-2
     var start_y := int(floor(offset.y/34.0))-2
@@ -219,14 +219,15 @@ func _ground(size: Vector2,center: Vector2)->void:
             if world.y>_bank(world.x): continue
             var hash := fposmod(sin(float(gx)*77.21+float(gy)*13.61)*43758.55,1.0)
             var screen_pos:=_screen(world,center)
-            draw_circle(screen_pos+Vector2(15,16),18,_col(Color("18352b") if hash>.42 else Color("24392d"),0.7))
-            if hash>.81:
-                draw_circle(screen_pos,11,_col(Color("304f39"),0.38))
+            if hash>.91:
+                draw_circle(screen_pos+Vector2(15,16),12,_col(Color("20382d"),0.34))
+            if hash>.92:
+                draw_circle(screen_pos,8,_col(Color("33523a"),0.27))
     var path_sp:=_screen(Vector2(1590,760),center)
     for i in range(150):
         var q := Vector2(path_sp.x + (float(i)-75)*9, path_sp.y + 17*sin(float(i)*0.13))
         if _in(q,size,70):
-            draw_circle(q,17,_col(Color("504b39"),0.20))
+            draw_circle(q,23,_col(Color("514936"),0.12))
 
 func _river(size: Vector2,center: Vector2)->void:
     var offset := hero-center
@@ -236,8 +237,8 @@ func _river(size: Vector2,center: Vector2)->void:
     for i in range(65,-1,-1):
         var x := float(i)*size.x/65.0
         poly.append(Vector2(x,_bank(x+offset.x)-offset.y))
-    draw_colored_polygon(poly,_col(Color("142e43"),0.88))
-    for i in range(600):
+    draw_colored_polygon(poly,_col(Color("071827"),0.90))
+    for i in range(450):
         var wx: float = floor(offset.x/15.0)*15.0+float(i%110)*15.0
         var wy: float = floor(offset.y/16.0)*16.0+float(i/110)*16.0
         var sy: float=wy-offset.y
@@ -245,7 +246,7 @@ func _river(size: Vector2,center: Vector2)->void:
         if wy<_bank(wx)+5: continue
         if sy<-30 or sy>size.y+20 or sx<-30 or sx>size.x+30: continue
         var wav := 4.0*sin(wx*0.025+timer*1.8+wy*0.012)
-        draw_line(Vector2(sx+wav,sy),Vector2(sx+wav+10.0+4*sin(timer+wx*.2),sy),_col(Color("478096"),0.55),1.5)
+        draw_line(Vector2(sx+wav,sy),Vector2(sx+wav+10.0+4*sin(timer+wx*.2),sy),_col(Color("79b0bb"),0.9),1.8)
     # Reflections are mirrored and displaced silhouettes of nearby trees.
     for t in trees:
         var p: Vector2=t["p"]
@@ -257,7 +258,7 @@ func _river(size: Vector2,center: Vector2)->void:
         for j in range(7):
             var ry:=float(j)*9.0
             var sway:=sin(timer*1.9+ry*0.25+p.x)*5.0
-            draw_line(q+Vector2(-r*0.4+sway,ry),q+Vector2(r*0.4+sway,ry),_col(PINE,0.35),2.5)
+            draw_line(q+Vector2(-r*0.4+sway,ry),q+Vector2(r*0.4+sway,ry),_col(PINE,0.67),3.2)
     for i in range(95):
         var wx:=float(i)*34.0
         var b :=_bank(wx)+2.0
@@ -272,10 +273,10 @@ func _foliage(size: Vector2,center: Vector2)->void:
         if not _in(sp,size,36): continue
         var h: float=grass_blade["height"]
         var sway:=sin(timer*1.75+float(grass_blade["phase"]))*h*.32+wind*.42
-        var c := _col(Color("467c56") if int(grass_blade["kind"])%4==0 else Color("335c43"),0.65+0.28*sin(float(grass_blade["phase"])))
-        draw_line(sp,sp+Vector2(sway,-h),c,1.5)
+        var c := _col(Color("7bb68a") if int(grass_blade["kind"])%4==0 else Color("4a8560"),0.86+0.20*sin(float(grass_blade["phase"])))
+        draw_line(sp,sp+Vector2(sway,-h),c,2.2)
         if int(grass_blade["kind"])==0:
-            draw_line(sp+Vector2(2,0),sp+Vector2(sway*0.7+5,-h*0.7),_col(Color("6a9866"),0.65),1.4)
+            draw_line(sp+Vector2(2,0),sp+Vector2(sway*0.7+5,-h*0.7),_col(Color("a0be79"),0.9),2.0)
     for i in range(150):
         var p:=Vector2(float((i*733)%3100)+20,float((i*311)%2250)+20)
         var s:=_screen(p,center)
@@ -294,24 +295,24 @@ func _tree(t: Dictionary,center: Vector2)->void:
     for j in range(8):
         var angle:=float(j)*TAU_F/8.0+float(t["phase"])
         var o:=Vector2(cos(angle),sin(angle))*radius*.39
-        draw_circle(crow+o,radius*.54,_col(Color("1c4437"),0.83))
-    draw_circle(crow,radius*.68,_col(Color("315b42"),0.92))
+        draw_circle(crow+o,radius*.54,_col(Color("27533d"),0.9))
+    draw_circle(crow,radius*.68,_col(Color("356e4e"),0.92))
     for j in range(30):
         var a:=float(j)*2.399963+float(t["phase"])
         var rr:=sqrt(float(j)/30.0)*radius*.86
         var leaf:=crow+Vector2(cos(a),sin(a))*rr
-        var colr:=Color("6ba477") if j%5==0 else Color("467b59")
+        var colr:=Color("a1cc90") if j%5==0 else Color("579b70")
         draw_circle(leaf,5.5 if j%5==0 else 3.0,_col(colr,0.60+(float(j%4)*.14)))
 
 func _body(pos: Vector2, cloaked: bool, swing: float)->void:
     draw_ellipse_shadow(pos)
     var torso:=pos+Vector2(0,-21)
-    var wool:=_col(Color("594454") if cloaked else Color("818d83"),1.20)
+    var wool:=_col(Color("895368") if cloaked else Color("aebdb6"),1.45)
     draw_line(torso+Vector2(-5,16),pos+Vector2(-6+sin(swing)*4,0),_col(Color("5c666b")),5)
     draw_line(torso+Vector2(5,16),pos+Vector2(6-sin(swing)*4,0),_col(Color("596465")),5)
     var cloak:=PackedVector2Array([torso+Vector2(-11,-7),torso+Vector2(11,-7),pos+Vector2(10,7),pos+Vector2(-12,7)])
     draw_colored_polygon(cloak,wool)
-    draw_circle(torso+Vector2(0,-12),9,_col(Color("988677"),1.15))
+    draw_circle(torso+Vector2(0,-12),9,_col(Color("d0b39a"),1.45))
     draw_line(torso+Vector2(-8,-6),torso+Vector2(-11,9+sin(swing)*2),wool,5)
     draw_line(torso+Vector2(8,-6),torso+Vector2(11,10-sin(swing)*2),wool,5)
     draw_circle(torso+Vector2(0,-16),3,_col(Color("d9c7af"),1.00))
