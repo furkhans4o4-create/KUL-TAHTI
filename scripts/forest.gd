@@ -219,15 +219,15 @@ func _ground(size: Vector2,center: Vector2)->void:
             if world.y>_bank(world.x): continue
             var hash := fposmod(sin(float(gx)*77.21+float(gy)*13.61)*43758.55,1.0)
             var screen_pos:=_screen(world,center)
-            if hash>.91:
-                draw_circle(screen_pos+Vector2(15,16),12,_col(Color("20382d"),0.34))
-            if hash>.92:
-                draw_circle(screen_pos,8,_col(Color("33523a"),0.27))
+            if hash>.74:
+                draw_circle(screen_pos+Vector2(15,16),13,_col(Color("577a58"),0.82))
+            if hash>.89:
+                draw_circle(screen_pos,9,_col(Color("6f855d"),0.85))
     var path_sp:=_screen(Vector2(1590,760),center)
     for i in range(150):
         var q := Vector2(path_sp.x + (float(i)-75)*9, path_sp.y + 17*sin(float(i)*0.13))
         if _in(q,size,70):
-            draw_circle(q,23,_col(Color("514936"),0.12))
+            draw_circle(q,23,_col(Color("817457"),0.68))
 
 func _river(size: Vector2,center: Vector2)->void:
     var offset := hero-center
@@ -238,15 +238,23 @@ func _river(size: Vector2,center: Vector2)->void:
         var x := float(i)*size.x/65.0
         poly.append(Vector2(x,_bank(x+offset.x)-offset.y))
     draw_colored_polygon(poly,_col(Color("071827"),0.90))
-    for i in range(450):
-        var wx: float = floor(offset.x/15.0)*15.0+float(i%110)*15.0
-        var wy: float = floor(offset.y/16.0)*16.0+float(i/110)*16.0
-        var sy: float=wy-offset.y
-        var sx: float=wx-offset.x
-        if wy<_bank(wx)+5: continue
-        if sy<-30 or sy>size.y+20 or sx<-30 or sx>size.x+30: continue
-        var wav := 4.0*sin(wx*0.025+timer*1.8+wy*0.012)
-        draw_line(Vector2(sx+wav,sy),Vector2(sx+wav+10.0+4*sin(timer+wx*.2),sy),_col(Color("79b0bb"),0.9),1.8)
+    # Every visible row must be sampled. Previous prototype covered only the
+    # first 80px of the screen, so the river looked like an empty black void.
+    var cols: int = int(ceil(size.x / 24.0)) + 2
+    var rows: int = int(ceil(size.y / 20.0)) + 2
+    for yy in range(rows):
+        for xx in range(cols):
+            var wx: float = floor(offset.x / 24.0) * 24.0 + float(xx) * 24.0
+            var wy: float = floor(offset.y / 20.0) * 20.0 + float(yy) * 20.0
+            if wy < _bank(wx) + 7.0:
+                continue
+            var sx: float = wx - offset.x
+            var sy: float = wy - offset.y
+            var variation: float = fposmod(sin(wx*0.193 + wy*0.355) * 9123.35, 1.0)
+            if variation < 0.30:
+                continue
+            var wav: float = 5.0*sin(wx * 0.028 + timer * 1.7 + wy * 0.018)
+            draw_line(Vector2(sx+wav, sy), Vector2(sx+wav+10.0+variation*11.0, sy), _col(Color("8ebdcf"), 1.15), 2.8)
     # Reflections are mirrored and displaced silhouettes of nearby trees.
     for t in trees:
         var p: Vector2=t["p"]
