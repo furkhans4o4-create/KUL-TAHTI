@@ -39,7 +39,7 @@ void fragment() {
 
     // Material-aware glyph selection: river, leaves, armor and earth use
     // distinct text rhythms instead of one brightness-to-noise lookup.
-    if (blue > 0.024 && avg.b > avg.g * 0.91) {
+    if (blue > 0.009 && avg.b > avg.g * 0.84) {
         glyph = 18.0; // ~ wave
         if (rand > 0.56 + 0.1 * phase) glyph = 19.0; // = ripples
         if (rand < 0.19) glyph = 3.0; // -
@@ -72,10 +72,10 @@ void fragment() {
     // The dark ground has almost no letters; foliage carries the scene.
     if (green > 0.025) {
         float leaf_weight = smoothstep(0.12, 0.34, lum);
-        float visible_fraction = mix(0.085, 0.62, leaf_weight);
+        float visible_fraction = mix(0.42, 0.78, leaf_weight);
         if (rand > visible_fraction) glyph = 0.0;
-    } else if (blue > 0.024 && avg.b > avg.g * 0.91) {
-        if (rand > 0.34) glyph = 0.0;
+    } else if (blue > 0.009 && avg.b > avg.g * 0.84) {
+        if (rand > 0.64) glyph = 0.0;
     } else if (warm > 0.03 && lum < 0.34) {
         if (rand > 0.44) glyph = 0.0;
     }
@@ -88,13 +88,13 @@ void fragment() {
     float pixels = texture(atlas_tex, atlas_uv).r;
 
     vec3 text_color = pow(max(avg, vec3(0.0)), vec3(0.70)) * brightness;
-    if (blue > 0.024 && avg.b > avg.g * 0.91) {
-        text_color = max(text_color, vec3(0.11, 0.32, 0.48));
+    if (blue > 0.009 && avg.b > avg.g * 0.84) {
+        text_color = max(text_color, vec3(0.18, 0.45, 0.64));
     } else if (green > 0.025) {
-        text_color = max(text_color, vec3(0.15, 0.27, 0.16));
+        text_color = max(text_color, vec3(0.24, 0.43, 0.25));
     }
     text_color = min(vec3(1.0), text_color);
-    vec3 background = vec3(0.009, 0.019, 0.021);
+    vec3 background = vec3(0.008, 0.017, 0.020);
     // The HUD is rendered in another CanvasItem and is never post-processed.
     COLOR = vec4(mix(background, text_color, pixels), 1.0);
 }
