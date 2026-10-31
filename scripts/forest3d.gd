@@ -10,12 +10,16 @@ var wood: int = 0
 var kills: int = 0
 var weapon: int = 0
 var weapon_names: Array[String] = ["LONGSWORD", "AXE", "SPEAR"]
-var status: String = "THE OLD KING IS DEAD. THE ROOTS REMEMBER."
+var status: String = "THE FOREST REMEMBERS."
 
 var hero_position: Vector3 = Vector3.ZERO
 var hero_facing: Vector3 = Vector3(0, 0, -1)
 var elapsed: float = 0.0
 var walk_phase: float = 0.0
+var shrine_pulse: float = 0.0
+var torch_light: OmniLight3D
+var grass_shader: ShaderMaterial
+var water_surface: ShaderMaterial
 var attack_remaining: float = 0.0
 var spell_remaining: float = 0.0
 var camera: Camera3D
@@ -45,7 +49,6 @@ func _ready() -> void:
     _stones()
     _shrine()
     _player()
-    _enemies()
     _camera()
     _rain()
     set_process(true)
@@ -111,12 +114,13 @@ func _terrain() -> void:
 
     # A broad river runs across the southern portion of the camera view.
     var river := PlaneMesh.new()
-    river.size = Vector2(135, 25)
+    river.size = Vector2(90, 25)
     var water_shader := Shader.new()
-    water_shader.code = "shader_type spatial;\nrender_mode cull_disabled;\nuniform vec4 water_color : source_color = vec4(0.035, 0.13, 0.19, 1.0);\nvoid fragment(){float wave = sin(UV.x * 110.0 + TIME * 2.0 + sin(UV.y*19.0 + TIME)*1.5); float band=sin(UV.y*34.0+UV.x*8.0-TIME*1.7); ALBEDO = water_color.rgb + vec3(0.03,0.08,0.11) * (wave*wave*0.5+band*band*0.3); ROUGHNESS = 0.14; METALLIC=0.14;}\n"
+    water_shader.code = "shader_type spatial;\nrender_mode cull_disabled;\nuniform float rain_power = 0.0;\nuniform vec4 water_color : source_color = vec4(0.025,0.115,0.175,1.0);\nfloat hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nvoid fragment(){vec2 p=UV*vec2(48.0,9.0); float wave=sin(p.x*4.0+TIME*1.9+sin(p.y*3.0+TIME)*1.2); float shine=pow(max(0.0,0.5+0.5*wave),9.0); vec2 tile=floor(p*1.5); vec2 in_tile=fract(p*1.5)-0.5; float cycle=fract(hash(tile)*5.0+TIME*0.75); float ring=exp(-pow((length(in_tile)-cycle*0.65)/0.042,2.0))*(1.0-cycle)*rain_power; ALBEDO=water_color.rgb+vec3(0.035,0.085,0.10)*shine+vec3(0.16,0.23,0.24)*ring; ROUGHNESS=0.18; METALLIC=0.13;}\n"
     var water_mat := ShaderMaterial.new()
     water_mat.shader = water_shader
     _mesh(river, water_mat, self, Vector3(0, -0.03, 20), Vector3.ONE)
+    water_surface = water_mat
 
     # Bank stones make the shore feel dimensional.
     var stone := _sphere(0.6)
@@ -131,32 +135,33 @@ func _grass() -> void:
     var blade := QuadMesh.new()
     blade.size = Vector2(0.20, 0.78)
     var shader := Shader.new()
-    shader.code = "shader_type spatial;\nrender_mode cull_disabled;\nvoid vertex(){VERTEX.x += UV.y * sin(TIME * 2.0 + float(INSTANCE_ID) * 0.61) * 0.11;}\nvoid fragment(){ALBEDO = COLOR.rgb; ROUGHNESS=1.0;}\n"
+    shader.code = "shader_type spatial;\nrender_mode cull_disabled;\nuniform vec3 hero_world = vec3(0.0);\nvoid vertex(){vec3 w=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; float d=distance(w.xz,hero_world.xz); float trample=1.0-smoothstep(0.35,2.2,d); float tip=1.0-UV.y; VERTEX.x += tip*(sin(TIME*1.45+w.x*0.9+w.z*0.7)*0.075+trample*0.29); VERTEX.y -= trample*tip*0.24;}\nvoid fragment(){ALBEDO = COLOR.rgb; ROUGHNESS=1.0;}\n"
     var grass_mat := ShaderMaterial.new()
     grass_mat.shader = shader
+    grass_shader = grass_mat
     blade.material = grass_mat
     var mm := MultiMesh.new()
     mm.transform_format = MultiMesh.TRANSFORM_3D
     mm.use_colors = true
     mm.mesh = blade
-    mm.instance_count = 3700
+    mm.instance_count = 8600
     var noise := FastNoiseLite.new()
     noise.seed = 8173
     noise.frequency = 0.078
     for i in range(mm.instance_count):
-        var x: float = rng.randf_range(-52, 52)
-        var z: float = rng.randf_range(-46, 47)
+        var x: float = rng.randf_range(-27, 27)
+        var z: float = rng.randf_range(-28, 12)
         var meadow: float = noise.get_noise_2d(x,z)
         # Reserve the player's clearing and stony trail.
-        if Vector2(x,z).length() < 8.0 or absf(z+2.7)<1.6 or z>7.0:
-            x = rng.randf_range(-52,52)
-            z = rng.randf_range(-43,-14)
-        var h: float = rng.randf_range(0.46, 1.10) * (1.0 + maxf(-0.3, meadow))
+        if Vector2(x,z).length() < 2.4 or absf(z+2.7)<0.65 or z>7.2:
+            x = rng.randf_range(-27,27)
+            z = rng.randf_range(-26,-5)
+        var h: float = rng.randf_range(0.52, 1.45) * (1.0 + maxf(-0.3, meadow))
         var angle: float = rng.randf_range(0, TAU)
         var orient := Basis().rotated(Vector3.UP, angle).scaled(Vector3(rng.randf_range(0.8, 1.5), h, 1.0))
         mm.set_instance_transform(i, Transform3D(orient, Vector3(x, h*0.39, z)))
         var shade: float = rng.randf_range(0.48, 0.92)
-        mm.set_instance_color(i, Color(0.18*shade,0.44*shade,0.23*shade,1))
+        mm.set_instance_color(i, Color(0.23*shade,0.48*shade,0.27*shade,1))
     var grass_field := MultiMeshInstance3D.new()
     grass_field.multimesh = mm
     grass_field.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -181,12 +186,12 @@ func _trees() -> void:
     trunk_instances.transform_format = MultiMesh.TRANSFORM_3D
     trunk_instances.use_colors = true
     trunk_instances.mesh = trunk_mesh
-    trunk_instances.instance_count = 72
+    trunk_instances.instance_count = 35
     crown_instances = MultiMesh.new()
     crown_instances.transform_format = MultiMesh.TRANSFORM_3D
     crown_instances.use_colors = true
     crown_instances.mesh = leaf_mesh
-    crown_instances.instance_count = 72 * 3
+    crown_instances.instance_count = 35 * 3
 
     var trunk_vis := MultiMeshInstance3D.new()
     trunk_vis.multimesh = trunk_instances
@@ -205,7 +210,7 @@ func _trees() -> void:
         Vector2(-12.5,2.0),Vector2(12.5,1.5),
         Vector2(-6.2,-20.0),Vector2(7.6,-20.8)
     ]
-    for i in range(72):
+    for i in range(35):
         var x: float = rng.randf_range(-51, 51)
         var z: float = rng.randf_range(-44, 40)
         if i < landmark_trees.size():
@@ -261,7 +266,8 @@ func _shrine() -> void:
     _mesh(crystal,gold_light,self,Vector3(0,1.4,-16.4),Vector3(0.72,1.55,0.72))
     var glow := OmniLight3D.new()
     glow.light_color = Color("ffc27a")
-    glow.light_energy = 1.5
+    glow.light_energy = 1.9
+    torch_light = glow
     glow.omni_range = 6.0
     glow.position = Vector3(0,2.4,-16.3)
     add_child(glow)
@@ -314,7 +320,7 @@ func _camera() -> void:
     camera = Camera3D.new()
     camera.name = "TopDownIsometric"
     camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-    camera.size = 24.0
+    camera.size = 22.0
     camera.near = 0.1
     camera.far = 170.0
     camera.current = true
@@ -329,7 +335,7 @@ func _sync_camera(delta: float) -> void:
 
 func _rain() -> void:
     rain_particles = CPUParticles3D.new()
-    rain_particles.amount = 330
+    rain_particles.amount = 600
     rain_particles.lifetime = 1.2
     rain_particles.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
     rain_particles.emission_box_extents = Vector3(17,6,17)
@@ -337,6 +343,7 @@ func _rain() -> void:
     rain_particles.gravity = Vector3(0,-15,0)
     rain_particles.initial_velocity_min = 2.0
     rain_particles.initial_velocity_max = 6.0
+    rain_particles.color = Color(0.67,0.81,0.87,0.8)
     var drop := SphereMesh.new()
     drop.radius = 0.018
     drop.height = 0.16
@@ -368,6 +375,11 @@ func _process(delta: float) -> void:
         actor.rotation.y = atan2(-move.x,-move.z)
         walk_phase += delta * 10.0
     actor.position = hero_position
+    grass_shader.set_shader_parameter("hero_world", hero_position)
+    water_surface.set_shader_parameter("rain_power", 1.0 if rain else 0.0)
+    shrine_pulse = maxf(0.0, shrine_pulse-delta)
+    if is_instance_valid(torch_light):
+        torch_light.light_energy = 1.8 + 0.27*sin(elapsed*8.7) + 2.0*shrine_pulse
     left_foot.position.z = 0.15*sin(walk_phase)
     right_foot.position.z = -0.15*sin(walk_phase)
     _sync_camera(delta)
@@ -386,20 +398,12 @@ func _process(delta: float) -> void:
 
 func action(key: int) -> void:
     match key:
-        KEY_1, KEY_2, KEY_3:
-            weapon = key - KEY_1
-            status = "EQUIPPED " + weapon_names[weapon]
-        KEY_SPACE:
-            attack_remaining = 0.38
-            _attack()
-        KEY_Q:
-            if mp < 20: return
-            mp-=20
-            spell_remaining=0.6
-            _attack(true)
-            status="ASPECT OF THE ASHEN FLAME"
         KEY_E:
-            _chop()
+            if hero_position.distance_to(Vector3(0,0,-16.4)) < 5.5:
+                shrine_pulse = 1.5
+                status="AN ANCIENT FLAME ANSWERS."
+            else:
+                status="FOLLOW THE OLD PATH TO THE SHRINE."
         KEY_R:
             rain=not rain
             rain_particles.emitting=rain
