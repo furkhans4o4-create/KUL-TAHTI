@@ -38,4 +38,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ascii-forest-visual-check
-          path: /tmp/kul-tahti-visual-check.png
+          path: |
+            /tmp/kul-tahti-visual-check.png
+            /tmp/kul-tahti-world-source.png
