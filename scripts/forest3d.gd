@@ -81,15 +81,15 @@ func _lighting() -> void:
     environment.background_mode = Environment.BG_COLOR
     environment.background_color = Color("111c1c")
     environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-    environment.ambient_light_color = Color("b0c9bd")
-    environment.ambient_light_energy = 1.25
+    environment.ambient_light_color = Color("84958a")
+    environment.ambient_light_energy = 0.55
     environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
     var world_env := WorldEnvironment.new()
     world_env.environment = environment
     add_child(world_env)
     sunlight = DirectionalLight3D.new()
-    sunlight.light_color = Color("ffdfaf")
-    sunlight.light_energy = 1.7
+    sunlight.light_color = Color("d9c4a6")
+    sunlight.light_energy = 0.95
     sunlight.shadow_enabled = true
     sunlight.rotation_degrees = Vector3(-53, 28, 0)
     add_child(sunlight)
@@ -97,11 +97,11 @@ func _lighting() -> void:
 func _terrain() -> void:
     var ground := PlaneMesh.new()
     ground.size = Vector2(130, 130)
-    var ground_mat := _material("233a30")
+    var ground_mat := _material("1a2923")
     _mesh(ground, ground_mat, self, Vector3(0, -0.11, 0), Vector3.ONE)
 
     # Pebbled trail around the ruined road.
-    var dust_mat := _material("5d5343")
+    var dust_mat := _material("514a3b")
     var pebble_mesh := _sphere(0.6)
     for i in range(90):
         var x: float = -41.0 + float(i) * 0.92
@@ -112,14 +112,14 @@ func _terrain() -> void:
     var river := PlaneMesh.new()
     river.size = Vector2(135, 25)
     var water_shader := Shader.new()
-    water_shader.code = "shader_type spatial;\nrender_mode cull_disabled;\nuniform vec4 water_color : source_color = vec4(0.065, 0.29, 0.42, 1.0);\nvoid fragment(){float wave = sin(UV.x * 110.0 + TIME * 2.0 + sin(UV.y*19.0 + TIME)*1.5); float band=sin(UV.y*34.0+UV.x*8.0-TIME*1.7); ALBEDO = water_color.rgb + vec3(0.04,0.12,0.15) * (wave*wave*0.5+band*band*0.3); ROUGHNESS = 0.14; METALLIC=0.14;}\n"
+    water_shader.code = "shader_type spatial;\nrender_mode cull_disabled;\nuniform vec4 water_color : source_color = vec4(0.035, 0.13, 0.19, 1.0);\nvoid fragment(){float wave = sin(UV.x * 110.0 + TIME * 2.0 + sin(UV.y*19.0 + TIME)*1.5); float band=sin(UV.y*34.0+UV.x*8.0-TIME*1.7); ALBEDO = water_color.rgb + vec3(0.03,0.08,0.11) * (wave*wave*0.5+band*band*0.3); ROUGHNESS = 0.14; METALLIC=0.14;}\n"
     var water_mat := ShaderMaterial.new()
     water_mat.shader = water_shader
     _mesh(river, water_mat, self, Vector3(0, -0.03, 20), Vector3.ONE)
 
     # Bank stones make the shore feel dimensional.
     var stone := _sphere(0.6)
-    var bank_mat := _material("6a7871")
+    var bank_mat := _material("48554d")
     for i in range(115):
         var x: float = rng.randf_range(-56, 56)
         var z: float = 7.5 + rng.randf_range(-1.5, 1.5)
@@ -138,7 +138,7 @@ func _grass() -> void:
     mm.transform_format = MultiMesh.TRANSFORM_3D
     mm.use_colors = true
     mm.mesh = blade
-    mm.instance_count = 16500
+    mm.instance_count = 9000
     var noise := FastNoiseLite.new()
     noise.seed = 8173
     noise.frequency = 0.078
@@ -154,8 +154,8 @@ func _grass() -> void:
         var angle: float = rng.randf_range(0, TAU)
         var orient := Basis().rotated(Vector3.UP, angle).scaled(Vector3(rng.randf_range(0.8, 1.5), h, 1.0))
         mm.set_instance_transform(i, Transform3D(orient, Vector3(x, h*0.39, z)))
-        var shade: float = rng.randf_range(0.55, 1.0)
-        mm.set_instance_color(i, Color(0.22*shade,0.54*shade,0.29*shade,1))
+        var shade: float = rng.randf_range(0.48, 0.92)
+        mm.set_instance_color(i, Color(0.18*shade,0.44*shade,0.23*shade,1))
     var grass_field := MultiMeshInstance3D.new()
     grass_field.multimesh = mm
     grass_field.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -169,7 +169,7 @@ func _trees() -> void:
     trunk_mesh.radial_segments = 7
     var leaf_mesh := _sphere(0.9)
     mat_trunk = _material("6d6251")
-    mat_foliage = _material("477b58")
+    mat_foliage = _material("3d6248")
     mat_trunk.vertex_color_use_as_albedo = true
     mat_foliage.vertex_color_use_as_albedo = true
     trunk_instances = MultiMesh.new()
@@ -214,10 +214,10 @@ func _trees() -> void:
             var at := origin + Vector3(0,height*0.80,0) + offset
             crown_instances.set_instance_transform(i*5+k,Transform3D(Basis().scaled(leafscale),at))
             var shade: float=rng.randf_range(0.72,1.12)
-            crown_instances.set_instance_color(i*5+k,Color(0.32*shade,0.76*shade,0.42*shade,1.0))
+            crown_instances.set_instance_color(i*5+k,Color(0.29*shade,0.55*shade,0.32*shade,1.0))
 
 func _stones() -> void:
-    var mat := _material("627c78")
+    var mat := _material("485b54")
     var s := _sphere(0.8)
     for i in range(210):
         var x: float = rng.randf_range(-50,50)
@@ -303,8 +303,8 @@ func _process(delta: float) -> void:
     elapsed += delta
     day_time = fposmod(day_time + delta/340.0,1.0)
     var sunlight_factor: float = 0.52+0.48*maxf(0.0,sin(day_time*TAU-PI*0.5))
-    sunlight.light_energy = 0.45 + sunlight_factor*1.6
-    environment.ambient_light_energy = 0.76 + sunlight_factor*0.60
+    sunlight.light_energy = 0.34 + sunlight_factor*0.95
+    environment.ambient_light_energy = 0.48 + sunlight_factor*0.34
     var move := Vector3.ZERO
     if Input.is_physical_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP): move.z -= 1
     if Input.is_physical_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN): move.z += 1
