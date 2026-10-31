@@ -68,7 +68,19 @@ void fragment() {
         if (lum > 0.16 && rand > 0.94) glyph = 8.0;
     }
 
-    if (max(dx_l, dy_l) > 0.19 && lum > 0.14) {
+    // Text occupancy is based on material and local detail, not just color.
+    // The dark ground has almost no letters; foliage carries the scene.
+    if (green > 0.025) {
+        float leaf_weight = smoothstep(0.12, 0.34, lum);
+        float visible_fraction = mix(0.085, 0.62, leaf_weight);
+        if (rand > visible_fraction) glyph = 0.0;
+    } else if (blue > 0.024 && avg.b > avg.g * 0.91) {
+        if (rand > 0.34) glyph = 0.0;
+    } else if (warm > 0.03 && lum < 0.34) {
+        if (rand > 0.44) glyph = 0.0;
+    }
+    // Bright hero/altar edges remain legible even in dense woods.
+    if (max(dx_l, dy_l) > 0.21 && lum > 0.23) {
         glyph = dx_l > dy_l ? 6.0 : 3.0;
     }
 
