@@ -43,14 +43,17 @@ void fragment() {
         glyph = 18.0; // ~ wave
         if (rand > 0.56 + 0.1 * phase) glyph = 19.0; // = ripples
         if (rand < 0.19) glyph = 3.0; // -
-        if (lum < 0.063 && rand < 0.43) glyph = 0.0;
+        if (rand < 0.34 + 0.10 * phase) glyph = 0.0;
+        if (lum < 0.10 && rand < 0.62) glyph = 0.0;
     } else if (green > 0.025) {
         glyph = 8.0; // i
         if (rand > 0.30) glyph = 10.0; // v
         if (rand > 0.58) glyph = 11.0; // Y
         if (rand > 0.81) glyph = 14.0; // *
         if (lum > 0.35) glyph = 16.0; // # sunlight on leaves
-        if (lum < 0.10 && rand < 0.68) glyph = 1.0;
+        if (lum < 0.30 && rand < 0.32) glyph = 0.0;
+        if (lum < 0.21 && rand < 0.66) glyph = 0.0;
+        if (lum < 0.12 && rand < 0.86) glyph = 0.0;
     } else if (warm > 0.03 || lum > 0.31) {
         glyph = 13.0; // x stone / leather
         if (lum > 0.43) glyph = 15.0; // %
@@ -60,12 +63,12 @@ void fragment() {
     } else {
         // Forest-floor negative space is deliberate, but still textured.
         glyph = 0.0;
-        if (lum > 0.065 && rand > 0.63) glyph = 1.0;
-        if (lum > 0.10 && rand > 0.75) glyph = 2.0;
-        if (lum > 0.16 && rand > 0.82) glyph = 8.0;
+        if (lum > 0.065 && rand > 0.78) glyph = 1.0;
+        if (lum > 0.10 && rand > 0.87) glyph = 2.0;
+        if (lum > 0.16 && rand > 0.94) glyph = 8.0;
     }
 
-    if (max(dx_l, dy_l) > 0.145 && lum > 0.105) {
+    if (max(dx_l, dy_l) > 0.19 && lum > 0.14) {
         glyph = dx_l > dy_l ? 6.0 : 3.0;
     }
 
