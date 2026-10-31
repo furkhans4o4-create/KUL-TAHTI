@@ -39,18 +39,21 @@ void fragment() {
 
     // Material-aware glyph selection: river, leaves, armor and earth use
     // distinct text rhythms instead of one brightness-to-noise lookup.
-    if (blue > 0.024 && avg.b > avg.g * 0.91) {
+    if (blue > 0.009 && avg.b > avg.g * 0.84) {
         glyph = 18.0; // ~ wave
         if (rand > 0.56 + 0.1 * phase) glyph = 19.0; // = ripples
         if (rand < 0.19) glyph = 3.0; // -
-        if (lum < 0.063 && rand < 0.43) glyph = 0.0;
+        if (rand < 0.34 + 0.10 * phase) glyph = 0.0;
+        if (lum < 0.10 && rand < 0.62) glyph = 0.0;
     } else if (green > 0.025) {
         glyph = 8.0; // i
         if (rand > 0.30) glyph = 10.0; // v
         if (rand > 0.58) glyph = 11.0; // Y
         if (rand > 0.81) glyph = 14.0; // *
         if (lum > 0.35) glyph = 16.0; // # sunlight on leaves
-        if (lum < 0.10 && rand < 0.68) glyph = 1.0;
+        if (lum < 0.30 && rand < 0.32) glyph = 0.0;
+        if (lum < 0.21 && rand < 0.66) glyph = 0.0;
+        if (lum < 0.12 && rand < 0.86) glyph = 0.0;
     } else if (warm > 0.03 || lum > 0.31) {
         glyph = 13.0; // x stone / leather
         if (lum > 0.43) glyph = 15.0; // %
@@ -60,12 +63,24 @@ void fragment() {
     } else {
         // Forest-floor negative space is deliberate, but still textured.
         glyph = 0.0;
-        if (lum > 0.065 && rand > 0.63) glyph = 1.0;
-        if (lum > 0.10 && rand > 0.75) glyph = 2.0;
-        if (lum > 0.16 && rand > 0.82) glyph = 8.0;
+        if (lum > 0.065 && rand > 0.78) glyph = 1.0;
+        if (lum > 0.10 && rand > 0.87) glyph = 2.0;
+        if (lum > 0.16 && rand > 0.94) glyph = 8.0;
     }
 
-    if (max(dx_l, dy_l) > 0.145 && lum > 0.105) {
+    // Text occupancy is based on material and local detail, not just color.
+    // The dark ground has almost no letters; foliage carries the scene.
+    if (green > 0.025) {
+        float leaf_weight = smoothstep(0.12, 0.34, lum);
+        float visible_fraction = mix(0.42, 0.78, leaf_weight);
+        if (rand > visible_fraction) glyph = 0.0;
+    } else if (blue > 0.009 && avg.b > avg.g * 0.84) {
+        if (rand > 0.64) glyph = 0.0;
+    } else if (warm > 0.03 && lum < 0.34) {
+        if (rand > 0.44) glyph = 0.0;
+    }
+    // Bright hero/altar edges remain legible even in dense woods.
+    if (max(dx_l, dy_l) > 0.21 && lum > 0.23) {
         glyph = dx_l > dy_l ? 6.0 : 3.0;
     }
 
@@ -73,13 +88,13 @@ void fragment() {
     float pixels = texture(atlas_tex, atlas_uv).r;
 
     vec3 text_color = pow(max(avg, vec3(0.0)), vec3(0.70)) * brightness;
-    if (blue > 0.024 && avg.b > avg.g * 0.91) {
-        text_color = max(text_color, vec3(0.11, 0.32, 0.48));
+    if (blue > 0.009 && avg.b > avg.g * 0.84) {
+        text_color = max(text_color, vec3(0.18, 0.45, 0.64));
     } else if (green > 0.025) {
-        text_color = max(text_color, vec3(0.15, 0.27, 0.16));
+        text_color = max(text_color, vec3(0.24, 0.43, 0.25));
     }
     text_color = min(vec3(1.0), text_color);
-    vec3 background = vec3(0.009, 0.019, 0.021);
+    vec3 background = vec3(0.008, 0.017, 0.020);
     // The HUD is rendered in another CanvasItem and is never post-processed.
     COLOR = vec4(mix(background, text_color, pixels), 1.0);
 }

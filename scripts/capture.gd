@@ -20,5 +20,18 @@ func _make_snapshot() -> void:
         push_error("Could not write screenshot: " + str(code))
         quit(1)
         return
-    print("Screenshot saved")
+    var world: SubViewport = scene.get_node("WorldViewport")
+    world.get_texture().get_image().save_png("/tmp/kul-tahti-world-source.png")
+    var world_logic: Node3D = scene.get_node("WorldViewport").get_child(0)
+    world_logic.action(KEY_R)
+    world_logic.hero_position += Vector3(1.3, 0.0, -1.0)
+    for i in range(80):
+        await process_frame
+    var wet_frame: Image = root.get_texture().get_image()
+    var wet_error: Error = wet_frame.save_png("/tmp/kul-tahti-rain-check.png")
+    if wet_error != OK:
+        push_error("Rain screenshot failed")
+        quit(1)
+        return
+    print("Dry and rainy screenshots saved")
     quit()
