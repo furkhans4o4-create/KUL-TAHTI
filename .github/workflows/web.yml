@@ -1,7 +1,7 @@
 name: Validate and export Godot Web
 on:
   push:
-    branches: [main, visual-rebuild-3d]
+    branches: [main, visual-rebuild-3d, ascii-atmosphere-demo]
   workflow_dispatch:
 permissions:
   contents: read
