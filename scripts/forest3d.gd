@@ -251,25 +251,25 @@ func _shrine() -> void:
     var stone := _material("71756c")
     var moss := _material("445c47")
     var gold_light := _material("efa65d", 0.3, true)
-    _mesh(BoxMesh.new(), stone, self, Vector3(0, 0.05, -16.0), Vector3(7.0,0.35,4.4))
-    _mesh(BoxMesh.new(), moss, self, Vector3(0, 0.24, -16.0), Vector3(5.6,0.25,3.3))
-    _mesh(BoxMesh.new(), stone, self, Vector3(0, 0.52, -16.4), Vector3(1.7,0.8,1.15))
+    _mesh(BoxMesh.new(), stone, self, Vector3(0, 0.05, -8.6), Vector3(7.0,0.35,4.4))
+    _mesh(BoxMesh.new(), moss, self, Vector3(0, 0.24, -8.6), Vector3(5.6,0.25,3.3))
+    _mesh(BoxMesh.new(), stone, self, Vector3(0, 0.52, -9.0), Vector3(1.7,0.8,1.15))
     var pillar := CylinderMesh.new()
     pillar.top_radius = 0.42
     pillar.bottom_radius = 0.50
     pillar.height = 1.0
     pillar.radial_segments = 6
-    _mesh(pillar,stone,self,Vector3(-2.35,1.95,-17.1),Vector3(1.0,3.0,1.0))
-    _mesh(pillar,stone,self,Vector3(2.35,1.15,-17.1),Vector3(1.0,1.55,1.0))
-    _mesh(BoxMesh.new(),stone,self,Vector3(-1.05,3.52,-17.1),Vector3(3.8,0.48,0.75))
+    _mesh(pillar,stone,self,Vector3(-2.35,1.95,-9.7),Vector3(1.0,3.0,1.0))
+    _mesh(pillar,stone,self,Vector3(2.35,1.15,-9.7),Vector3(1.0,1.55,1.0))
+    _mesh(BoxMesh.new(),stone,self,Vector3(-1.05,3.52,-9.7),Vector3(3.8,0.48,0.75))
     var crystal := _sphere(0.48)
-    _mesh(crystal,gold_light,self,Vector3(0,1.4,-16.4),Vector3(0.72,1.55,0.72))
+    _mesh(crystal,gold_light,self,Vector3(0,1.4,-9.0),Vector3(0.72,1.55,0.72))
     var glow := OmniLight3D.new()
     glow.light_color = Color("ffc27a")
     glow.light_energy = 1.9
     torch_light = glow
     glow.omni_range = 6.0
-    glow.position = Vector3(0,2.4,-16.3)
+    glow.position = Vector3(0,2.4,-8.9)
     add_child(glow)
 
 func _player() -> void:
@@ -329,7 +329,7 @@ func _camera() -> void:
 
 func _sync_camera(delta: float) -> void:
     var target := hero_position + Vector3(0,0.9,0)
-    var at := target + Vector3(0,24,16)
+    var at := target + Vector3(0,22,15)
     camera.position = camera.position.lerp(at,minf(1.0,delta*6.0))
     camera.look_at(target,Vector3.UP)
 
@@ -360,7 +360,7 @@ func _process(delta: float) -> void:
     day_time = fposmod(day_time + delta/340.0,1.0)
     var sunlight_factor: float = 0.52+0.48*maxf(0.0,sin(day_time*TAU-PI*0.5))
     sunlight.light_energy = 0.34 + sunlight_factor*0.95
-    environment.ambient_light_energy = 0.48 + sunlight_factor*0.34
+    environment.ambient_light_energy = 0.64 + sunlight_factor*0.36
     var move := Vector3.ZERO
     if Input.is_physical_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP): move.z -= 1
     if Input.is_physical_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN): move.z += 1
@@ -399,7 +399,7 @@ func _process(delta: float) -> void:
 func action(key: int) -> void:
     match key:
         KEY_E:
-            if hero_position.distance_to(Vector3(0,0,-16.4)) < 5.5:
+            if hero_position.distance_to(Vector3(0,0,-9.0)) < 5.5:
                 shrine_pulse = 1.5
                 status="AN ANCIENT FLAME ANSWERS."
             else:
