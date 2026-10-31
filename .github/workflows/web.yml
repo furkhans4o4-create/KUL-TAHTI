@@ -1,0 +1,59 @@
+name: Build and publish Godot Web
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: godot-pages
+  cancel-in-progress: true
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned Godot 4.3 and Web export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          curl -fL --retry 3 -o /tmp/exports.tpz "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          mkdir -p /tmp/godot-binary /tmp/godot-templates "$HOME/.local/share/godot/export_templates/4.3.stable"
+          unzip -q /tmp/godot.zip -d /tmp/godot-binary
+          unzip -q /tmp/exports.tpz -d /tmp/godot-templates
+          mv /tmp/godot-templates/templates/* "$HOME/.local/share/godot/export_templates/4.3.stable/"
+          chmod +x /tmp/godot-binary/Godot_v4.3-stable_linux.x86_64
+      - name: Parse and import
+        shell: bash
+        run: |
+          set -o pipefail
+          /tmp/godot-binary/Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit 2>&1 | tee /tmp/import.log
+          if grep -Eiq 'SCRIPT ERROR|Parse Error|Failed loading script' /tmp/import.log; then exit 1; fi
+      - name: Smoke test
+        shell: bash
+        run: |
+          set -o pipefail
+          /tmp/godot-binary/Godot_v4.3-stable_linux.x86_64 --headless --path . --quit-after 15 2>&1 | tee /tmp/runtime.log
+          if grep -Eiq 'SCRIPT ERROR|Parse Error|Failed loading script|Shader compilation failed' /tmp/runtime.log; then exit 1; fi
+      - name: Export real Godot Web build
+        shell: bash
+        run: |
+          mkdir -p dist
+          /tmp/godot-binary/Godot_v4.3-stable_linux.x86_64 --headless --path . --export-release "Web" dist/index.html
+          test -s dist/index.html
+          test -s dist/index.wasm
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Web build
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+      - name: Deploy Web build
+        id: deployment
+        uses: actions/deploy-pages@v4
