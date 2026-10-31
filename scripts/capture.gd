@@ -20,5 +20,7 @@ func _make_snapshot() -> void:
         push_error("Could not write screenshot: " + str(code))
         quit(1)
         return
-    print("Screenshot saved")
+    var world: SubViewport = scene.get_node("WorldViewport")
+    world.get_texture().get_image().save_png("/tmp/kul-tahti-world-source.png")
+    print("Screenshots saved")
     quit()
