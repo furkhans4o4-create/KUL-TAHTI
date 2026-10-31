@@ -59,7 +59,7 @@ func _ready() -> void:
 func _resize() -> void:
     var s = get_viewport_rect().size
     viewport.size = Vector2i(maxi(640, int(s.x)), maxi(360, int(s.y)))
-    effect.set_shader_parameter("glyph_grid", Vector2(maxf(100.0,s.x/6.6),maxf(64.0,s.y/8.8)))
+    effect.set_shader_parameter("glyph_grid", Vector2(maxf(220.0,s.x/3.8),maxf(115.0,s.y/5.1)))
     if bottom_label != null:
         bottom_label.position = Vector2(20,s.y-56.0)
     if header_background != null:
