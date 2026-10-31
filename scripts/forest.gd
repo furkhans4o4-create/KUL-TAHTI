@@ -226,8 +226,8 @@ func _ground(size: Vector2,center: Vector2)->void:
     var path_sp:=_screen(Vector2(1590,760),center)
     for i in range(150):
         var q := Vector2(path_sp.x + (float(i)-75)*9, path_sp.y + 17*sin(float(i)*0.13))
-        if _in(q,size,70):
-            draw_circle(q,23,_col(Color("817457"),0.68))
+        if _in(q,size,70) and i%3==0:
+            draw_circle(q,12,_col(Color("918464"),0.75))
 
 func _river(size: Vector2,center: Vector2)->void:
     var offset := hero-center
@@ -237,7 +237,7 @@ func _river(size: Vector2,center: Vector2)->void:
     for i in range(65,-1,-1):
         var x := float(i)*size.x/65.0
         poly.append(Vector2(x,_bank(x+offset.x)-offset.y))
-    draw_colored_polygon(poly,_col(Color("071827"),0.90))
+    draw_colored_polygon(poly,_col(Color("28536b"),0.98))
     # Every visible row must be sampled. Previous prototype covered only the
     # first 80px of the screen, so the river looked like an empty black void.
     var cols: int = int(ceil(size.x / 24.0)) + 2
@@ -254,7 +254,7 @@ func _river(size: Vector2,center: Vector2)->void:
             if variation < 0.30:
                 continue
             var wav: float = 5.0*sin(wx * 0.028 + timer * 1.7 + wy * 0.018)
-            draw_line(Vector2(sx+wav, sy), Vector2(sx+wav+10.0+variation*11.0, sy), _col(Color("8ebdcf"), 1.15), 2.8)
+            draw_line(Vector2(sx+wav, sy), Vector2(sx+wav+10.0+variation*11.0, sy), _col(Color("b0d4d9"), 1.25), 5.0)
     # Reflections are mirrored and displaced silhouettes of nearby trees.
     for t in trees:
         var p: Vector2=t["p"]
@@ -266,13 +266,13 @@ func _river(size: Vector2,center: Vector2)->void:
         for j in range(7):
             var ry:=float(j)*9.0
             var sway:=sin(timer*1.9+ry*0.25+p.x)*5.0
-            draw_line(q+Vector2(-r*0.4+sway,ry),q+Vector2(r*0.4+sway,ry),_col(PINE,0.67),3.2)
+            draw_line(q+Vector2(-r*0.4+sway,ry),q+Vector2(r*0.4+sway,ry),_col(PINE,0.76),5.0)
     for i in range(95):
         var wx:=float(i)*34.0
         var b :=_bank(wx)+2.0
         var q:=_screen(Vector2(wx,b),center)
         if _in(q,size,60):
-            draw_circle(q,6,_col(Color("739a8b"),0.24))
+            draw_circle(q,6,_col(Color("94afa0"),0.9))
 
 func _foliage(size: Vector2,center: Vector2)->void:
     for grass_blade in grass:
