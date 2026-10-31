@@ -112,7 +112,7 @@ func action(key: int) -> void:
             status = "EQUIPPED "+weapon_names[weapon]
         KEY_SPACE:
             attack_time = 0.33
-            var reach := [76.0,65.0,122.0][weapon]
+            var reach: float = float([76.0,65.0,122.0][weapon])
             for j in range(enemies.size()-1,-1,-1):
                 var e: Dictionary=enemies[j]
                 var v: Vector2=e["p"]-hero
@@ -238,10 +238,10 @@ func _river(size: Vector2,center: Vector2)->void:
         poly.append(Vector2(x,_bank(x+offset.x)-offset.y))
     draw_colored_polygon(poly,_col(Color("142e43"),0.88))
     for i in range(600):
-        var wx:=floor(offset.x/15.0)*15.0+float(i%110)*15.0
-        var wy:=floor(offset.y/16.0)*16.0+float(i/110)*16.0
-        var sy:=wy-offset.y
-        var sx:=wx-offset.x
+        var wx: float = floor(offset.x/15.0)*15.0+float(i%110)*15.0
+        var wy: float = floor(offset.y/16.0)*16.0+float(i/110)*16.0
+        var sy: float=wy-offset.y
+        var sx: float=wx-offset.x
         if wy<_bank(wx)+5: continue
         if sy<-30 or sy>size.y+20 or sx<-30 or sx>size.x+30: continue
         var wav := 4.0*sin(wx*0.025+timer*1.8+wy*0.012)
