@@ -1,10 +1,10 @@
 extends Control
 
-const FOREST = preload("res://scripts/forest.gd")
+const FOREST = preload("res://scripts/forest3d.gd")
 const ASCII = preload("res://shaders/ascii.gdshader")
 const FONT_ATLAS = preload("res://scripts/glyph_atlas.gd")
 var viewport: SubViewport
-var forest: Node2D
+var forest: Node3D
 var screen: TextureRect
 var top_label: Label
 var bottom_label: Label
@@ -17,7 +17,7 @@ func _ready() -> void:
     viewport = SubViewport.new()
     viewport.name = "WorldViewport"
     viewport.size = Vector2i(1280,720)
-    viewport.disable_3d = true
+    viewport.disable_3d = false
     viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
     add_child(viewport)
     forest = FOREST.new()
