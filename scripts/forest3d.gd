@@ -138,7 +138,7 @@ func _grass() -> void:
     mm.transform_format = MultiMesh.TRANSFORM_3D
     mm.use_colors = true
     mm.mesh = blade
-    mm.instance_count = 9000
+    mm.instance_count = 3700
     var noise := FastNoiseLite.new()
     noise.seed = 8173
     noise.frequency = 0.078
@@ -147,10 +147,10 @@ func _grass() -> void:
         var z: float = rng.randf_range(-46, 47)
         var meadow: float = noise.get_noise_2d(x,z)
         # Reserve the player's clearing and stony trail.
-        if (absf(x) < 2.5 and absf(z) < 2.6) or absf(z+2.7)<0.9 or z>7.0:
+        if Vector2(x,z).length() < 8.0 or absf(z+2.7)<1.6 or z>7.0:
             x = rng.randf_range(-52,52)
-            z = rng.randf_range(-43,-4)
-        var h: float = rng.randf_range(0.55, 1.28) * (1.0 + maxf(-0.3, meadow))
+            z = rng.randf_range(-43,-14)
+        var h: float = rng.randf_range(0.46, 1.10) * (1.0 + maxf(-0.3, meadow))
         var angle: float = rng.randf_range(0, TAU)
         var orient := Basis().rotated(Vector3.UP, angle).scaled(Vector3(rng.randf_range(0.8, 1.5), h, 1.0))
         mm.set_instance_transform(i, Transform3D(orient, Vector3(x, h*0.39, z)))
@@ -167,7 +167,11 @@ func _trees() -> void:
     trunk_mesh.bottom_radius = 0.32
     trunk_mesh.height = 1.0
     trunk_mesh.radial_segments = 7
-    var leaf_mesh := _sphere(0.9)
+    var leaf_mesh := CylinderMesh.new()
+    leaf_mesh.top_radius = 0.06
+    leaf_mesh.bottom_radius = 0.88
+    leaf_mesh.height = 1.0
+    leaf_mesh.radial_segments = 7
     mat_trunk = _material("6d6251")
     mat_foliage = _material("3d6248")
     mat_trunk.vertex_color_use_as_albedo = true
@@ -176,12 +180,12 @@ func _trees() -> void:
     trunk_instances.transform_format = MultiMesh.TRANSFORM_3D
     trunk_instances.use_colors = true
     trunk_instances.mesh = trunk_mesh
-    trunk_instances.instance_count = 135
+    trunk_instances.instance_count = 95
     crown_instances = MultiMesh.new()
     crown_instances.transform_format = MultiMesh.TRANSFORM_3D
     crown_instances.use_colors = true
     crown_instances.mesh = leaf_mesh
-    crown_instances.instance_count = 135 * 5
+    crown_instances.instance_count = 95 * 3
 
     var trunk_vis := MultiMeshInstance3D.new()
     trunk_vis.multimesh = trunk_instances
@@ -192,29 +196,27 @@ func _trees() -> void:
     leaves_vis.material_override = mat_foliage
     add_child(leaves_vis)
 
-    for i in range(135):
+    for i in range(95):
         var x: float = rng.randf_range(-51, 51)
         var z: float = rng.randf_range(-44, 40)
-        if (absf(x)<4.0 and absf(z)<5.0) or z>6.8 or absf(z+2.7)<1.3:
+        if Vector2(x,z).length()<10.0 or z>6.8 or absf(z+2.7)<2.2:
             x = rng.randf_range(-50, 50)
-            z = rng.randf_range(-41, -8)
-        var height: float = rng.randf_range(3.7, 6.1)
-        var width: float = rng.randf_range(1.6, 2.7)
+            z = rng.randf_range(-41, -15)
+        var height: float = rng.randf_range(4.9, 8.1)
+        var width: float = rng.randf_range(1.35, 2.05)
         var origin := Vector3(x, 0.0, z)
         trees.append({"origin": origin, "hp": 3, "index": i})
         trunk_instances.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(1,height,1)), origin + Vector3(0,height*0.5,0)))
         trunk_instances.set_instance_color(i,Color(0.80,0.75,0.64,1.0))
-        var crown_centers: Array[Vector3] = [
-            Vector3(-0.55,0,0.12),Vector3(0.65,0,0.10),Vector3(0,0,-0.68),
-            Vector3(0,0,0.75),Vector3(0,0.66,0)
-        ]
-        for k in range(5):
-            var offset: Vector3 = crown_centers[k]*width
-            var leafscale := Vector3(width*0.9, width*0.70, width*0.88)
-            var at := origin + Vector3(0,height*0.80,0) + offset
-            crown_instances.set_instance_transform(i*5+k,Transform3D(Basis().scaled(leafscale),at))
-            var shade: float=rng.randf_range(0.72,1.12)
-            crown_instances.set_instance_color(i*5+k,Color(0.29*shade,0.55*shade,0.32*shade,1.0))
+        # Three overlapping tapered tiers create a readable pine silhouette.
+        for k in range(3):
+            var tier_width: float = width * (1.55 - float(k)*0.35)
+            var tier_height: float = height * 0.44
+            var at := origin + Vector3(0,height*(0.65+float(k)*0.19),0)
+            var leafscale := Vector3(tier_width,tier_height,tier_width)
+            crown_instances.set_instance_transform(i*3+k,Transform3D(Basis().scaled(leafscale),at))
+            var shade: float=rng.randf_range(0.75,1.0)
+            crown_instances.set_instance_color(i*3+k,Color(0.28*shade,0.53*shade,0.31*shade,1.0))
 
 func _stones() -> void:
     var mat := _material("485b54")
@@ -248,9 +250,18 @@ func _player() -> void:
     _mesh(BoxMesh.new(),metal,sword,Vector3(0,0.60,0),Vector3(0.09,1.28,0.08))
     _mesh(BoxMesh.new(),_material("9a794b"),sword,Vector3(0,0.03,0),Vector3(0.47,0.10,0.12))
     actor.position = hero_position
+    actor.scale = Vector3.ONE * 1.45
+    # A small pale ring gives the player a distinct focal point in ASCII.
+    var ring_mat := _material("b39c65", 1.0, true)
+    var marker_mesh := CylinderMesh.new()
+    marker_mesh.top_radius = 0.90
+    marker_mesh.bottom_radius = 0.90
+    marker_mesh.height = 0.015
+    marker_mesh.radial_segments = 32
+    _mesh(marker_mesh,ring_mat,actor,Vector3(0,0.025,0),Vector3(1,1,1))
 
 func _enemies() -> void:
-    var cloth := _material("724950")
+    var cloth := _material("533e4a")
     var face := _material("b4a59b")
     for p in [Vector3(-8,0,-7),Vector3(8,0,-10),Vector3(-4,0,-20),Vector3(14,0,1),Vector3(6,0,-26)]:
         var root := Node3D.new()
@@ -265,7 +276,7 @@ func _camera() -> void:
     camera = Camera3D.new()
     camera.name = "TopDownIsometric"
     camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-    camera.size = 22.5
+    camera.size = 24.0
     camera.near = 0.1
     camera.far = 170.0
     camera.current = true
@@ -274,7 +285,7 @@ func _camera() -> void:
 
 func _sync_camera(delta: float) -> void:
     var target := hero_position + Vector3(0,0.9,0)
-    var at := target + Vector3(0,23,23)
+    var at := target + Vector3(0,24,16)
     camera.position = camera.position.lerp(at,minf(1.0,delta*6.0))
     camera.look_at(target,Vector3.UP)
 
@@ -381,8 +392,8 @@ func _chop() -> void:
                 wood+=2
                 var idx: int=int(t["index"])
                 trunk_instances.set_instance_transform(idx,Transform3D(Basis(),Vector3(2000,2000,2000)))
-                for j in range(5):
-                    crown_instances.set_instance_transform(idx*5+j,Transform3D(Basis(),Vector3(2000,2000,2000)))
+                for j in range(3):
+                    crown_instances.set_instance_transform(idx*3+j,Transform3D(Basis(),Vector3(2000,2000,2000)))
                 status="AN OLD TREE FALLS. +2 WOOD"
             else:
                 status="THE TRUNK CRACKS"
