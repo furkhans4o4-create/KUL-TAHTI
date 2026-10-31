@@ -34,6 +34,8 @@ jobs:
           set -euo pipefail
           xvfb-run -a -s "-screen 0 1280x720x24" /tmp/engine/Godot_v4.3-stable_linux.x86_64 --path . --rendering-method gl_compatibility --script res://scripts/capture.gd
           test -s /tmp/kul-tahti-visual-check.png
+          test -s /tmp/kul-tahti-rain-check.png
+          ! cmp -s /tmp/kul-tahti-visual-check.png /tmp/kul-tahti-rain-check.png
       - name: Upload screenshot
         uses: actions/upload-artifact@v4
         with:
@@ -41,3 +43,4 @@ jobs:
           path: |
             /tmp/kul-tahti-visual-check.png
             /tmp/kul-tahti-world-source.png
+            /tmp/kul-tahti-rain-check.png
