@@ -191,10 +191,12 @@ func _trees() -> void:
     var trunk_vis := MultiMeshInstance3D.new()
     trunk_vis.multimesh = trunk_instances
     trunk_vis.material_override = mat_trunk
+    trunk_vis.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
     add_child(trunk_vis)
     var leaves_vis := MultiMeshInstance3D.new()
     leaves_vis.multimesh = crown_instances
     leaves_vis.material_override = mat_foliage
+    leaves_vis.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
     add_child(leaves_vis)
 
     var landmark_trees: Array[Vector2] = [
