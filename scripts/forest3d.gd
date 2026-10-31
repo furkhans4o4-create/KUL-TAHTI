@@ -107,8 +107,8 @@ func _terrain() -> void:
     # Pebbled trail around the ruined road.
     var dust_mat := _material("514a3b")
     var pebble_mesh := _sphere(0.6)
-    for i in range(90):
-        var x: float = -41.0 + float(i) * 0.92
+    for i in range(48):
+        var x: float = -22.0 + float(i) * 0.92
         var z: float = -2.7 + sin(float(i) * 0.14) * 0.5
         _mesh(pebble_mesh, dust_mat, self, Vector3(x, -0.04, z + rng.randf_range(-0.9, 0.9)), Vector3(rng.randf_range(0.3, 1.5), 0.06, rng.randf_range(0.45, 1.2)))
 
@@ -133,7 +133,7 @@ func _terrain() -> void:
 func _grass() -> void:
     # Grass uses a single instanced mesh and oscillates in the vertex shader.
     var blade := QuadMesh.new()
-    blade.size = Vector2(0.20, 0.78)
+    blade.size = Vector2(0.075, 1.10)
     var shader := Shader.new()
     shader.code = "shader_type spatial;\nrender_mode cull_disabled;\nuniform vec3 hero_world = vec3(0.0);\nvoid vertex(){vec3 w=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; float d=distance(w.xz,hero_world.xz); float trample=1.0-smoothstep(0.35,2.2,d); float tip=1.0-UV.y; VERTEX.x += tip*(sin(TIME*1.45+w.x*0.9+w.z*0.7)*0.075+trample*0.29); VERTEX.y -= trample*tip*0.24;}\nvoid fragment(){ALBEDO = COLOR.rgb; ROUGHNESS=1.0;}\n"
     var grass_mat := ShaderMaterial.new()
@@ -144,7 +144,7 @@ func _grass() -> void:
     mm.transform_format = MultiMesh.TRANSFORM_3D
     mm.use_colors = true
     mm.mesh = blade
-    mm.instance_count = 8600
+    mm.instance_count = 11000
     var noise := FastNoiseLite.new()
     noise.seed = 8173
     noise.frequency = 0.078
@@ -156,12 +156,12 @@ func _grass() -> void:
         if Vector2(x,z).length() < 2.4 or absf(z+2.7)<0.65 or z>7.2:
             x = rng.randf_range(-27,27)
             z = rng.randf_range(-26,-5)
-        var h: float = rng.randf_range(0.52, 1.45) * (1.0 + maxf(-0.3, meadow))
+        var h: float = rng.randf_range(0.64, 1.35) * (1.0 + maxf(-0.3, meadow))
         var angle: float = rng.randf_range(0, TAU)
         var orient := Basis().rotated(Vector3.UP, angle).scaled(Vector3(rng.randf_range(0.8, 1.5), h, 1.0))
         mm.set_instance_transform(i, Transform3D(orient, Vector3(x, h*0.39, z)))
-        var shade: float = rng.randf_range(0.48, 0.92)
-        mm.set_instance_color(i, Color(0.23*shade,0.48*shade,0.27*shade,1))
+        var shade: float = rng.randf_range(0.62, 0.96)
+        mm.set_instance_color(i, Color(0.25*shade,0.59*shade,0.29*shade,1))
     var grass_field := MultiMeshInstance3D.new()
     grass_field.multimesh = mm
     grass_field.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -294,7 +294,7 @@ func _player() -> void:
     _mesh(BoxMesh.new(),metal,sword,Vector3(0,0.60,0),Vector3(0.09,1.28,0.08))
     _mesh(BoxMesh.new(),_material("9a794b"),sword,Vector3(0,0.03,0),Vector3(0.47,0.10,0.12))
     actor.position = hero_position
-    actor.scale = Vector3.ONE * 1.45
+    actor.scale = Vector3.ONE * 1.65
     # A small pale ring gives the player a distinct focal point in ASCII.
     var ring_mat := _material("b39c65", 1.0, true)
     var marker_mesh := CylinderMesh.new()
@@ -302,7 +302,7 @@ func _player() -> void:
     marker_mesh.bottom_radius = 0.90
     marker_mesh.height = 0.015
     marker_mesh.radial_segments = 32
-    _mesh(marker_mesh,ring_mat,actor,Vector3(0,0.025,0),Vector3(1,1,1))
+    _mesh(marker_mesh,ring_mat,actor,Vector3(0,0.015,0),Vector3(0.42,1.0,0.42))
 
 func _enemies() -> void:
     var cloth := _material("533e4a")
