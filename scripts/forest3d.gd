@@ -43,6 +43,7 @@ func _ready() -> void:
     _grass()
     _trees()
     _stones()
+    _shrine()
     _player()
     _enemies()
     _camera()
@@ -180,12 +181,12 @@ func _trees() -> void:
     trunk_instances.transform_format = MultiMesh.TRANSFORM_3D
     trunk_instances.use_colors = true
     trunk_instances.mesh = trunk_mesh
-    trunk_instances.instance_count = 95
+    trunk_instances.instance_count = 72
     crown_instances = MultiMesh.new()
     crown_instances.transform_format = MultiMesh.TRANSFORM_3D
     crown_instances.use_colors = true
     crown_instances.mesh = leaf_mesh
-    crown_instances.instance_count = 95 * 3
+    crown_instances.instance_count = 72 * 3
 
     var trunk_vis := MultiMeshInstance3D.new()
     trunk_vis.multimesh = trunk_instances
@@ -196,10 +197,19 @@ func _trees() -> void:
     leaves_vis.material_override = mat_foliage
     add_child(leaves_vis)
 
-    for i in range(95):
+    var landmark_trees: Array[Vector2] = [
+        Vector2(-9.5,-8.2),Vector2(9.6,-8.9),
+        Vector2(-15.5,-14.0),Vector2(15.0,-15.8),
+        Vector2(-12.5,2.0),Vector2(12.5,1.5),
+        Vector2(-6.2,-20.0),Vector2(7.6,-20.8)
+    ]
+    for i in range(72):
         var x: float = rng.randf_range(-51, 51)
         var z: float = rng.randf_range(-44, 40)
-        if Vector2(x,z).length()<10.0 or z>6.8 or absf(z+2.7)<2.2:
+        if i < landmark_trees.size():
+            x = landmark_trees[i].x
+            z = landmark_trees[i].y
+        elif Vector2(x,z).length()<10.0 or z>6.8 or absf(z+2.7)<2.2:
             x = rng.randf_range(-50, 50)
             z = rng.randf_range(-41, -15)
         var height: float = rng.randf_range(4.9, 8.1)
@@ -227,6 +237,32 @@ func _stones() -> void:
         if absf(x)<3.0 and absf(z)<3.0:
             continue
         _mesh(s,mat,self,Vector3(x,0.0,z),Vector3(rng.randf_range(0.20,0.60),0.11,rng.randf_range(0.25,0.74)))
+
+func _shrine() -> void:
+    # A recognizable landmark: three worn stone steps, broken arch and
+    # amber beacon. Everything goes through the ASCII post-process.
+    var stone := _material("71756c")
+    var moss := _material("445c47")
+    var gold_light := _material("efa65d", 0.3, true)
+    _mesh(BoxMesh.new(), stone, self, Vector3(0, 0.05, -16.0), Vector3(7.0,0.35,4.4))
+    _mesh(BoxMesh.new(), moss, self, Vector3(0, 0.24, -16.0), Vector3(5.6,0.25,3.3))
+    _mesh(BoxMesh.new(), stone, self, Vector3(0, 0.52, -16.4), Vector3(1.7,0.8,1.15))
+    var pillar := CylinderMesh.new()
+    pillar.top_radius = 0.42
+    pillar.bottom_radius = 0.50
+    pillar.height = 1.0
+    pillar.radial_segments = 6
+    _mesh(pillar,stone,self,Vector3(-2.35,1.95,-17.1),Vector3(1.0,3.0,1.0))
+    _mesh(pillar,stone,self,Vector3(2.35,1.15,-17.1),Vector3(1.0,1.55,1.0))
+    _mesh(BoxMesh.new(),stone,self,Vector3(-1.05,3.52,-17.1),Vector3(3.8,0.48,0.75))
+    var crystal := _sphere(0.48)
+    _mesh(crystal,gold_light,self,Vector3(0,1.4,-16.4),Vector3(0.72,1.55,0.72))
+    var glow := OmniLight3D.new()
+    glow.light_color = Color("ffc27a")
+    glow.light_energy = 1.5
+    glow.omni_range = 6.0
+    glow.position = Vector3(0,2.4,-16.3)
+    add_child(glow)
 
 func _player() -> void:
     actor = Node3D.new()
